@@ -1,0 +1,30 @@
+[package]
+name = "kowalski"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0.81"
+chrono = "0.4.35"
+clap = { version = "4.5.3", features = ["cargo", "derive", "string", "env"] }
+clap-serde-derive = "0.2.1"
+git2 = "0.18.3"
+log = "0.4.21"
+octocrab = "0.36.0"
+qdrant-client = "1.8.0"
+reqwest = { version = "0.12.1", features = ["blocking", "json"] }
+serde = "1.0.197"
+serde_json = "1.0.114"
+time = "0.3.34"
+tokio = { version = "1.36.0", features = ["full", "rt-multi-thread"] }
+tonic = "0.11.0"
+unidiff = "0.3.3"
+url = "2.5.0"
+lazy_static = "1.4.0"
+hf-hub = "0.3.2"
+candle-core = "0.4.1"
+candle-nn = "0.4.1"
+candle-transformers = "0.4.1"
+tokenizers = "0.15.2"
