@@ -16,7 +16,7 @@ pub async fn process_source_code(
     local_repository_path: &str,
     pr_data: &PullRequestData,
     pr_info: FetchPullRequest,
-    embedding_model: &EmbeddingModelLocal,
+    embedding_model: &mut EmbeddingModelLocal,
     memory: &EmbeddingMemoryQdrant,
 ) -> anyhow::Result<()> {
     // 1. clone repository
@@ -49,7 +49,7 @@ pub async fn process_source_code(
 async fn process_code_files(
     repo_path: &str,
     code_file_paths: &Vec<PathBuf>,
-    embedding_model: &EmbeddingModelLocal,
+    embedding_model: &mut EmbeddingModelLocal,
     memory: &EmbeddingMemoryQdrant,
 ) -> anyhow::Result<()> {
     let embeddings: Vec<CodeEmbeddingData> = code_file_paths
@@ -57,6 +57,7 @@ async fn process_code_files(
         .map(|code_file_path| {
             let code = fs::read_to_string(Path::join(Path::new(repo_path), code_file_path))
                 .expect("Failed to read file");
+
             let embeddings = embedding_model.get_embedding(&code);
             println!("Embeddings: {:?}", embeddings);
             CodeEmbeddingData {

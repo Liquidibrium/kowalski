@@ -6,6 +6,7 @@ use qdrant_client::qdrant::{
     WithPayloadSelector, WithVectorsSelector,
 };
 use std::collections::HashMap;
+use anyhow::Context;
 
 pub fn create_vector_store_client(url: &str) -> anyhow::Result<QdrantClient> {
     QdrantClient::from_url(url).build()
@@ -23,7 +24,7 @@ pub trait EmbeddingMemory {
     async fn insert_batch(&self, embeddings: &Vec<CodeEmbeddingData>) -> anyhow::Result<()>;
 
     async fn search(&self, embedding: Vec<f32>, top: u64)
-        -> anyhow::Result<Vec<CodeEmbeddingData>>;
+                    -> anyhow::Result<Vec<CodeEmbeddingData>>;
 }
 
 pub struct EmbeddingMemoryQdrant {
@@ -33,6 +34,7 @@ pub struct EmbeddingMemoryQdrant {
 
 impl EmbeddingMemory for EmbeddingMemoryQdrant {
     fn new(db_url: &str, collection: &str) -> Self {
+        
         let client = create_vector_store_client(db_url).unwrap();
         EmbeddingMemoryQdrant {
             collection: collection.to_string(),
@@ -120,4 +122,15 @@ impl EmbeddingMemory for EmbeddingMemoryQdrant {
 
         Ok(results)
     }
+}
+
+
+pub fn init_memory() -> anyhow::Result<()> {
+    // execute docker compose up
+    std::process::Command::new("docker-compose")
+        .arg("up")
+        .arg("-d")
+        .output()
+        .context("failed to execute process")?;
+    Ok(())
 }

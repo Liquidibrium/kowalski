@@ -8,6 +8,7 @@ mod init;
 mod llm;
 mod memory;
 mod utils;
+mod device;
 
 use crate::analyzer::analyze_code_changes;
 use crate::cli::GitProvider;
@@ -15,7 +16,7 @@ use crate::code_processor::code::process_source_code;
 use crate::embeddings::embedding::{EmbeddingCalculator, EmbeddingModelLocal};
 use crate::git_provider::client::fetch_pull_request;
 use crate::git_provider::pr::FetchPullRequest;
-use crate::memory::memory_db::{EmbeddingMemory, EmbeddingMemoryQdrant};
+use crate::memory::memory_db::{EmbeddingMemory, EmbeddingMemoryQdrant, init_memory};
 use clap::Parser;
 use cli::Cli;
 
@@ -32,7 +33,7 @@ async fn main() -> anyhow::Result<()> {
                 token,
                 git_provider,
             } => {
-                let embedding = EmbeddingModelLocal::new(&"tmp".to_string());
+                let mut embedding = EmbeddingModelLocal::new(&"tmp".to_string());
 
                 let pr_info = get_pr_repository_info(
                     owner,
@@ -51,9 +52,10 @@ async fn main() -> anyhow::Result<()> {
                     "kowalski-{}-{}-{}-{}",
                     pr_info.owner, pr_info.repo, pr_info.pull_request, now
                 );
+                init_memory()?;
                 let memory =
                     EmbeddingMemoryQdrant::new("http://localhost:6333", collection.as_str());
-                process_source_code(local_path.as_str(), &pr_data, pr_info, &embedding, &memory)
+                process_source_code(local_path.as_str(), &pr_data, pr_info, &mut embedding, &memory)
                     .await?;
 
                 analyze_code_changes(&pr_data, &embedding, &memory).await?;
