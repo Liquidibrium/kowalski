@@ -32,10 +32,7 @@ pub async fn process_source_code(
     println!("Local path: {:?}", repo_path);
 
     // 2. Read the files from the repository
-    let files = read_files(&repo_path, |path| {
-        // should exclude if directory is .git
-        path.ends_with(".git")
-    })?;
+    let files = read_files(&repo_path, should_exclude)?;
     println!("Files: {:?}", files);
 
     process_code_files(&repo_path, &files, embedding_model, memory).await?;
@@ -104,4 +101,14 @@ fn read_files(
     }
 
     Ok(files)
+}
+
+pub fn should_exclude(path: &PathBuf) -> bool {
+    // should exclude if directory is .git
+    let path_string = path.to_str();
+    if path_string.is_none() {
+        return true;
+    }
+    let path_string = path_string.unwrap();
+    path.ends_with(".git") || path_string.contains(".circleci")
 }

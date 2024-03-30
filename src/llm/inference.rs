@@ -5,12 +5,10 @@ use candle_transformers::generation::LogitsProcessor;
 use candle_transformers::models::quantized_mixformer::Config;
 use candle_transformers::models::quantized_mixformer::MixFormerSequentialForCausalLM as QMixFormer;
 use hf_hub::{api::sync::Api, Repo};
-use serde_json::json;
+
+use crate::device::device;
 use tokenizers::Tokenizer;
 use tracing::debug;
-use crate::device::device;
-
-
 
 pub fn load_model() -> Result<(QMixFormer, Tokenizer)> {
     let api = Api::new()?.repo(Repo::model(
@@ -21,7 +19,10 @@ pub fn load_model() -> Result<(QMixFormer, Tokenizer)> {
 
     let tokenizer = Tokenizer::from_file(tokenizer_filename).map_err(E::msg)?;
     let config = Config::v2();
-    let vb = candle_transformers::quantized_var_builder::VarBuilder::from_gguf(&weights_filename, &device(true)?)?;
+    let vb = candle_transformers::quantized_var_builder::VarBuilder::from_gguf(
+        weights_filename,
+        &device(true)?,
+    )?;
     let model = QMixFormer::new_v2(&config, vb)?;
 
     Ok((model, tokenizer))
@@ -111,10 +112,11 @@ impl TextGeneration {
     }
 }
 
-pub async fn answer_with_context(query: &str,
-                                 model: &QMixFormer,
-                                 tokenizer: &Tokenizer,
-                                ) -> Result<String> {
+pub async fn answer_with_context(
+    query: &str,
+    model: &QMixFormer,
+    tokenizer: &Tokenizer,
+) -> Result<String> {
     let prompt = format!("<|im_start|>system
 As a AI Code reviewer you should analyze provided code changes, like git diff.
 you should provide feedback on the code changes, and suggest improvements, find code bugs, and security vulnerabilities.

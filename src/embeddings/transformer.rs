@@ -1,8 +1,8 @@
 use anyhow::{Context, Error as E, Result};
-use candle_core::{Device, DType, Tensor};
+use candle_core::{DType, Device, Tensor};
 use candle_nn::VarBuilder;
 // use candle_transformers::models::bert::{BertModel, Config, DTYPE};
-use candle_transformers::models::t5::{T5EncoderModel, Config};
+use candle_transformers::models::t5::{Config, T5EncoderModel};
 use hf_hub::{api::sync::Api, Repo};
 use tokenizers::{PaddingParams, Tokenizer};
 const DTYPE: DType = DType::F32;
@@ -48,10 +48,17 @@ pub fn load_model_bert_model(config: &EmbeddingModelConfig) -> Result<ModelAndTo
     Ok(ModelAndTokenizer { model, tokenizer })
 }
 
-pub fn get_embeddings(sentence: &str, model: &mut T5EncoderModel, tokenizer: &Tokenizer) -> Result<Vec<f32>> {
+pub fn get_embeddings(
+    sentence: &str,
+    model: &mut T5EncoderModel,
+    tokenizer: &Tokenizer,
+) -> Result<Vec<f32>> {
     // println!("sentence: {}", sentence);
     // Tokenizing the sentence
-    let tokens = tokenizer.encode_batch(vec![sentence], true).map_err(E::msg).context("Unable to encode sentence")?;
+    let tokens = tokenizer
+        .encode_batch(vec![sentence], true)
+        .map_err(E::msg)
+        .context("Unable to encode sentence")?;
 
     // Getting the token ids from the tokens
     let token_ids = tokens
@@ -60,19 +67,29 @@ pub fn get_embeddings(sentence: &str, model: &mut T5EncoderModel, tokenizer: &To
             let tokens = tokens.get_ids().to_vec();
             Ok(Tensor::new(tokens.as_slice(), &Device::Cpu)?)
         })
-        .collect::<Result<Vec<_>>>().context("Unable to get token ids")?;
+        .collect::<Result<Vec<_>>>()
+        .context("Unable to get token ids")?;
 
     // Stacking the token ids into a tensor
     let token_ids = Tensor::stack(&token_ids, 0).context("Unable to stack token ids")?;
 
     // Getting the embeddings from the model
-    let embeddings = model.forward(&token_ids).context("Unable to get embeddings from model")?;
+    let embeddings = model
+        .forward(&token_ids)
+        .context("Unable to get embeddings from model")?;
 
     // Normalizing the embeddings
-    let (_n_sentence, n_tokens, _hidden_size) = embeddings.dims3().context("Unable to get embeddings dimensions")?;
-    let embeddings = (embeddings.sum(1)? / (n_tokens as f64)).context("Unable to get embeddings sum")?;
-    let embeddings = embeddings.broadcast_div(&embeddings.sqr()?.sum_keepdim(1)?.sqrt()?).context("Unable to get embeddings broadcast div")?;
+    let (_n_sentence, n_tokens, _hidden_size) = embeddings
+        .dims3()
+        .context("Unable to get embeddings dimensions")?;
+    let embeddings =
+        (embeddings.sum(1)? / (n_tokens as f64)).context("Unable to get embeddings sum")?;
+    let embeddings = embeddings
+        .broadcast_div(&embeddings.sqr()?.sum_keepdim(1)?.sqrt()?)
+        .context("Unable to get embeddings broadcast div")?;
 
-    let vec2 = embeddings.to_vec2().context("Unable to get embeddings to vec2")?;
-    return Ok(vec2.get(0).context("vector is empty")?.clone());
+    let vec2 = embeddings
+        .to_vec2()
+        .context("Unable to get embeddings to vec2")?;
+    Ok(vec2.first().context("vector is empty")?.clone())
 }

@@ -1,5 +1,5 @@
-use crate::cli::GitProvider;
 use crate::diff::SerializablePatchedFile;
+use crate::git_provider::git::GitProvider;
 use serde::Serialize;
 
 pub struct FetchPullRequest {

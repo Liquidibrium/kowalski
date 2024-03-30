@@ -1,5 +1,5 @@
-use crate::cli::GitProvider;
 use crate::diff::SerializablePatchedFile;
+use crate::git_provider::git::GitProvider;
 use crate::git_provider::pr::{FetchPullRequest, PullRequestData};
 use std::path::Path;
 use unidiff::PatchSet;
@@ -87,7 +87,7 @@ pub async fn clone_remote_repository(
     });
 
     let local_path = format!("{}/{}", local_repository_path, head_sha);
-    println!("Cloning repository to {}", local_path); 
+    println!("Cloning repository to {}", local_path);
     git2::build::RepoBuilder::new()
         .branch(head_ref)
         .clone(clone_url.as_str(), Path::new(&local_path))?;

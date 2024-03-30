@@ -1,2 +1,3 @@
 pub mod analyzer_model;
-mod inference;
+pub mod inference;
+pub mod models;

@@ -29,7 +29,7 @@ impl Serialize for SerializableHunk {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct SerializablePatchedFile(pub PatchedFile);
 
 impl Serialize for SerializablePatchedFile {

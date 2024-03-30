@@ -1,6 +1,7 @@
 mod analyzer;
 mod cli;
 mod code_processor;
+mod device;
 mod diff;
 mod embeddings;
 mod git_provider;
@@ -8,15 +9,14 @@ mod init;
 mod llm;
 mod memory;
 mod utils;
-mod device;
 
 use crate::analyzer::analyze_code_changes;
-use crate::cli::GitProvider;
 use crate::code_processor::code::process_source_code;
 use crate::embeddings::embedding::{EmbeddingCalculator, EmbeddingModelLocal};
 use crate::git_provider::client::fetch_pull_request;
+use crate::git_provider::git::GitProvider;
 use crate::git_provider::pr::FetchPullRequest;
-use crate::memory::memory_db::{EmbeddingMemory, EmbeddingMemoryQdrant, init_memory};
+use crate::memory::memory_db::{init_memory, EmbeddingMemory, EmbeddingMemoryQdrant};
 use clap::Parser;
 use cli::Cli;
 
@@ -30,17 +30,18 @@ async fn main() -> anyhow::Result<()> {
                 repository,
                 pull_request,
                 pr_link,
-                token,
+                git_token,
                 git_provider,
+                ..
             } => {
-                let mut embedding = EmbeddingModelLocal::new(&"tmp".to_string());
+                let mut embedding = EmbeddingModelLocal::new("tmp");
 
                 let pr_info = get_pr_repository_info(
                     owner,
                     repository,
                     pull_request,
                     pr_link,
-                    token,
+                    git_token,
                     git_provider,
                 );
                 let pr_data = fetch_pull_request(&pr_info).await?;
@@ -55,17 +56,23 @@ async fn main() -> anyhow::Result<()> {
                 init_memory()?;
                 let memory =
                     EmbeddingMemoryQdrant::new("http://localhost:6333", collection.as_str());
-                process_source_code(local_path.as_str(), &pr_data, pr_info, &mut embedding, &memory)
-                    .await?;
+                process_source_code(
+                    local_path.as_str(),
+                    &pr_data,
+                    pr_info,
+                    &mut embedding,
+                    &memory,
+                )
+                .await?;
 
-                analyze_code_changes(&pr_data, &embedding, &memory).await?;
+                analyze_code_changes(&pr_data, &mut embedding, &memory).await?;
             }
         },
         None => {
             println!("use: kowalski analysis --help for more details");
         }
     }
-    
+
     return Ok(());
 }
 

@@ -1,5 +1,6 @@
-use clap::{Parser, Subcommand, ValueEnum};
-use serde::Serialize;
+use crate::git_provider::git::GitProvider;
+use crate::llm::models::{EmbeddingModel, LlmModel};
+use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -12,16 +13,9 @@ pub struct Cli {
     pub command: Option<Commands>,
 }
 
-#[derive(Debug, ValueEnum, Clone, Eq, PartialEq, Serialize)]
-pub enum GitProvider {
-    Github,
-    Gitlab,
-    Bitbucket,
-}
-
 #[derive(Subcommand)]
 pub enum Commands {
-    #[command(about = "Analyze code changes in a pull request", alias="analyze")]
+    #[command(about = "Analyze code changes in a pull request", alias = "analyze")]
     Analysis {
         /// GitHub owner
         #[arg(short, long, required_unless_present_any = & ["pr_link"], requires = "repository")]
@@ -40,11 +34,25 @@ pub enum Commands {
         pr_link: Option<String>,
 
         /// GitHub token
-        #[arg(short, long, env("GITHUB_TOKEN"))]
-        token: Option<String>,
+        #[arg(long, env("GIT_TOKEN"))]
+        git_token: Option<String>,
 
         #[clap(value_enum, default_value_t = GitProvider::Github)]
         #[arg(short, long)]
         git_provider: GitProvider,
+
+        #[clap(value_enum, default_value_t = LlmModel::Gpt3_5Turbo)]
+        #[arg(short, long)]
+        llm_model: LlmModel,
+
+        #[clap(value_enum, default_value_t = EmbeddingModel::OpenAiTextEmbedding3Small)]
+        #[arg(short, long)]
+        embedding_model: EmbeddingModel,
+
+        #[arg(long, env = "OPENAI_API_KEY")]
+        openai_api_key: Option<String>,
+
+        #[arg(long, env = "ANTHROPIC_API_KEY")]
+        anthropic_api_key: Option<String>,
     },
 }

@@ -12,7 +12,7 @@ clap = { version = "4.5.3", features = ["cargo", "derive", "string", "env"] }
 clap-serde-derive = "0.2.1"
 git2 = "0.18.3"
 log = "0.4.21"
-octocrab = "0.36.0"
+octocrab = "0.37.0"
 qdrant-client = "1.8.0"
 reqwest = { version = "0.12.1", features = ["blocking", "json"] }
 serde = "1.0.197"

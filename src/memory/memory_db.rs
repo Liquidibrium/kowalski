@@ -1,3 +1,4 @@
+use anyhow::Context;
 use qdrant_client::client::QdrantClient;
 use qdrant_client::prelude::{PointStruct, SearchPoints};
 use qdrant_client::qdrant::vectors::VectorsOptions;
@@ -6,7 +7,6 @@ use qdrant_client::qdrant::{
     WithPayloadSelector, WithVectorsSelector,
 };
 use std::collections::HashMap;
-use anyhow::Context;
 
 pub fn create_vector_store_client(url: &str) -> anyhow::Result<QdrantClient> {
     QdrantClient::from_url(url).build()
@@ -17,14 +17,22 @@ pub struct CodeEmbeddingData {
     pub code: String,
     pub filename: String,
 }
-
+pub struct CodeEmbeddingResult {
+    pub embedding: Vec<f32>,
+    pub code: String,
+    pub filename: String,
+    pub similarity_score: f32,
+}
 pub trait EmbeddingMemory {
     fn new(db_url: &str, collection: &str) -> Self;
 
     async fn insert_batch(&self, embeddings: &Vec<CodeEmbeddingData>) -> anyhow::Result<()>;
 
-    async fn search(&self, embedding: Vec<f32>, top: u64)
-                    -> anyhow::Result<Vec<CodeEmbeddingData>>;
+    async fn search(
+        &self,
+        embedding: Vec<f32>,
+        top: u64,
+    ) -> anyhow::Result<Vec<CodeEmbeddingResult>>;
 }
 
 pub struct EmbeddingMemoryQdrant {
@@ -34,7 +42,6 @@ pub struct EmbeddingMemoryQdrant {
 
 impl EmbeddingMemory for EmbeddingMemoryQdrant {
     fn new(db_url: &str, collection: &str) -> Self {
-        
         let client = create_vector_store_client(db_url).unwrap();
         EmbeddingMemoryQdrant {
             collection: collection.to_string(),
@@ -76,7 +83,7 @@ impl EmbeddingMemory for EmbeddingMemoryQdrant {
         &self,
         embedding: Vec<f32>,
         top_k: u64,
-    ) -> anyhow::Result<Vec<CodeEmbeddingData>> {
+    ) -> anyhow::Result<Vec<CodeEmbeddingResult>> {
         let search_options = SearchPoints {
             collection_name: self.collection.clone(),
             vector: embedding,
@@ -104,11 +111,11 @@ impl EmbeddingMemory for EmbeddingMemoryQdrant {
         };
         let response = self.client.search_points(&search_options).await?;
 
-        let mut results: Vec<CodeEmbeddingData> = Vec::new();
+        let mut results: Vec<CodeEmbeddingResult> = Vec::new();
         for point in response.result {
             let code = point.payload.get("code").unwrap().to_string();
             let filename = point.payload.get("filename").unwrap().to_string();
-            results.push(CodeEmbeddingData {
+            results.push(CodeEmbeddingResult {
                 embedding: match point.vectors.unwrap().vectors_options.unwrap() {
                     VectorsOptions::Vector(vector) => vector.data.clone(),
                     VectorsOptions::Vectors(_) => {
@@ -117,13 +124,13 @@ impl EmbeddingMemory for EmbeddingMemoryQdrant {
                 },
                 code,
                 filename,
+                similarity_score: point.score,
             });
         }
 
         Ok(results)
     }
 }
-
 
 pub fn init_memory() -> anyhow::Result<()> {
     // execute docker compose up
