@@ -1,4 +1,5 @@
 use anyhow::Context;
+use log::info;
 use qdrant_client::client::QdrantClient;
 use qdrant_client::prelude::{PointStruct, SearchPoints};
 use qdrant_client::qdrant::vectors::VectorsOptions;
@@ -12,50 +13,86 @@ pub fn create_vector_store_client(url: &str) -> anyhow::Result<QdrantClient> {
     QdrantClient::from_url(url).build()
 }
 
+pub struct Chunk {
+    pub content: String,
+    pub file_path: String,
+    pub start_line: u64,
+    pub end_line: u64,
+    pub token_size: u64,
+}
+
+pub struct FileAndContent {
+    pub content: String,
+    pub file_path: String,
+}
+
 pub struct CodeEmbeddingData {
     pub embedding: Vec<f32>,
-    pub code: String,
-    pub filename: String,
+    pub chunk: Chunk,
 }
+
 pub struct CodeEmbeddingResult {
     pub embedding: Vec<f32>,
-    pub code: String,
-    pub filename: String,
+    pub chunk: Chunk,
     pub similarity_score: f32,
 }
-pub trait EmbeddingMemory {
-    fn new(db_url: &str, collection: &str) -> Self;
 
-    async fn insert_batch(&self, embeddings: &Vec<CodeEmbeddingData>) -> anyhow::Result<()>;
+pub trait EmbeddingMemory {
+    fn new(db_url: &str) -> Self;
+
+    async fn insert_batch(
+        &self,
+        embeddings: &Vec<CodeEmbeddingData>,
+        collection: &str,
+    ) -> anyhow::Result<()>;
 
     async fn search(
         &self,
-        embedding: Vec<f32>,
+        embedding: &Vec<f32>,
+        collection: &str,
         top: u64,
     ) -> anyhow::Result<Vec<CodeEmbeddingResult>>;
 }
 
 pub struct EmbeddingMemoryQdrant {
-    collection: String,
     client: QdrantClient,
 }
 
 impl EmbeddingMemory for EmbeddingMemoryQdrant {
-    fn new(db_url: &str, collection: &str) -> Self {
+    fn new(db_url: &str) -> Self {
         let client = create_vector_store_client(db_url).unwrap();
-        EmbeddingMemoryQdrant {
-            collection: collection.to_string(),
-            client,
-        }
+        EmbeddingMemoryQdrant { client }
     }
 
-    async fn insert_batch(&self, embeddings: &Vec<CodeEmbeddingData>) -> anyhow::Result<()> {
+    async fn insert_batch(
+        &self,
+        embeddings: &Vec<CodeEmbeddingData>,
+        collection: &str,
+    ) -> anyhow::Result<()> {
         let embeddings: Vec<PointStruct> = embeddings
             .iter()
             .map(|data| {
                 let mut payload: HashMap<String, Value> = HashMap::new();
-                payload.insert("code".to_string(), Value::from(data.code.clone()));
-                payload.insert("filename".to_string(), Value::from(data.filename.clone()));
+                payload.insert(
+                    "content".to_string(),
+                    Value::from(data.chunk.content.clone()),
+                );
+                payload.insert(
+                    "file_path".to_string(),
+                    Value::from(data.chunk.file_path.clone()),
+                );
+                payload.insert(
+                    "start_line".to_string(),
+                    Value::from(data.chunk.start_line as i64),
+                );
+                payload.insert(
+                    "end_line".to_string(),
+                    Value::from(data.chunk.end_line as i64),
+                );
+                payload.insert(
+                    "tokens_size".to_string(),
+                    Value::from(data.chunk.token_size as i64),
+                );
                 PointStruct {
                     id: None,
                     vectors: Some(Vectors {
@@ -70,23 +107,29 @@ impl EmbeddingMemory for EmbeddingMemoryQdrant {
             .collect();
 
         let length = embeddings.len();
+        info!(
+            "Inserting embeddings into collection: {} len: {}",
+            collection, length
+        );
+
         let response = self
             .client
-            .upsert_points_batch(self.collection.clone(), None, embeddings, None, length)
+            .upsert_points_batch(collection, None, embeddings, None, length)
             .await?;
 
-        println!("Response: {:?}", response);
+        println!("Qdrant upsert points batch Response: {:?}", response);
         Ok(())
     }
 
     async fn search(
         &self,
-        embedding: Vec<f32>,
+        embedding: &Vec<f32>,
+        collection: &str,
         top_k: u64,
     ) -> anyhow::Result<Vec<CodeEmbeddingResult>> {
         let search_options = SearchPoints {
-            collection_name: self.collection.clone(),
-            vector: embedding,
+            collection_name: collection.to_string(),
+            vector: embedding.clone(),
             limit: top_k,
             score_threshold: Some(0.3),
             params: Some(SearchParams {
@@ -113,8 +156,31 @@ impl EmbeddingMemory for EmbeddingMemoryQdrant {
 
         let mut results: Vec<CodeEmbeddingResult> = Vec::new();
         for point in response.result {
-            let code = point.payload.get("code").unwrap().to_string();
-            let filename = point.payload.get("filename").unwrap().to_string();
+            let chunk = Chunk {
+                content: point.payload.get("content").unwrap().to_string(),
+                file_path: point.payload.get("file_path").unwrap().to_string(),
+                start_line: point
+                    .payload
+                    .get("start_line")
+                    .unwrap()
+                    .to_string()
+                    .parse()
+                    .unwrap(),
+                end_line: point
+                    .payload
+                    .get("end_line")
+                    .unwrap()
+                    .to_string()
+                    .parse()
+                    .unwrap(),
+                token_size: point
+                    .payload
+                    .get("tokens_size")
+                    .unwrap()
+                    .to_string()
+                    .parse()
+                    .unwrap(),
+            };
             results.push(CodeEmbeddingResult {
                 embedding: match point.vectors.unwrap().vectors_options.unwrap() {
                     VectorsOptions::Vector(vector) => vector.data.clone(),
@@ -122,8 +188,7 @@ impl EmbeddingMemory for EmbeddingMemoryQdrant {
                         panic!("Vectors not supported")
                     }
                 },
-                code,
-                filename,
+                chunk,
                 similarity_score: point.score,
             });
         }
