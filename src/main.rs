@@ -12,11 +12,15 @@ mod utils;
 
 use crate::analyzer::analyze_code_changes;
 use crate::code_processor::code::process_source_code;
-use crate::embeddings::embedding::{EmbeddingCalculator, EmbeddingModelLocal};
+use crate::embeddings::embedding_model_service::{EmbeddingModelService, EmbeddingService};
+use crate::embeddings::openai::OpenaiEmbeddings;
 use crate::git_provider::client::fetch_pull_request;
 use crate::git_provider::git::GitProvider;
 use crate::git_provider::pr::FetchPullRequest;
+use crate::llm::anthropic::CloudeTextModel;
+use crate::llm::models::{EmbeddingModel, LlmModel};
 use crate::memory::memory_db::{init_memory, EmbeddingMemory, EmbeddingMemoryQdrant};
+use anyhow::Context;
 use clap::Parser;
 use cli::Cli;
 
@@ -32,10 +36,11 @@ async fn main() -> anyhow::Result<()> {
                 pr_link,
                 git_token,
                 git_provider,
-                ..
+                embedding_model,
+                openai_api_key,
+                anthropic_api_key,
+                llm_model: _,
             } => {
-                let mut embedding = EmbeddingModelLocal::new("tmp");
-
                 let pr_info = get_pr_repository_info(
                     owner,
                     repository,
@@ -54,18 +59,37 @@ async fn main() -> anyhow::Result<()> {
                     pr_info.owner, pr_info.repo, pr_info.pull_request, now
                 );
                 init_memory()?;
-                let memory =
-                    EmbeddingMemoryQdrant::new("http://localhost:6333", collection.as_str());
+                let memory = EmbeddingMemoryQdrant::new("http://localhost:6333");
+                let openai_api_key = openai_api_key
+                    .as_ref()
+                    .context("OpenAI API key was not provided")?;
+                let embedding_api = OpenaiEmbeddings::new(
+                    openai_api_key,
+                    embedding_model,
+                );
+
+                let embedding_service = EmbeddingModelService::new(embedding_api, memory);
+
                 process_source_code(
                     local_path.as_str(),
                     &pr_data,
                     pr_info,
-                    &mut embedding,
-                    &memory,
+                    &embedding_service,
+                    collection.as_str(),
                 )
                 .await?;
-
-                analyze_code_changes(&pr_data, &mut embedding, &memory).await?;
+                let anthropic_api_key = anthropic_api_key
+                    .as_ref()
+                    .expect("no anthropic api key found ");
+                let llm_model =
+                    CloudeTextModel::new(anthropic_api_key, vec![LlmModel::Claude3Haiku], None);
+                analyze_code_changes(
+                    &pr_data,
+                    &embedding_service,
+                    &llm_model,
+                    collection.as_str(),
+                )
+                .await?;
             }
         },
         None => {

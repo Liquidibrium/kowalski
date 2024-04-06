@@ -1,7 +1,8 @@
-use crate::embeddings::embedding::{EmbeddingCalculator, EmbeddingModelLocal};
+use crate::embeddings::embedding_model_service::{EmbeddingModelService, EmbeddingService};
+use crate::embeddings::openai::OpenaiEmbeddings;
 use crate::git_provider::client::clone_remote_repository;
 use crate::git_provider::pr::{FetchPullRequest, PullRequestData};
-use crate::memory::memory_db::{CodeEmbeddingData, EmbeddingMemory, EmbeddingMemoryQdrant};
+use crate::memory::memory_db::{EmbeddingMemoryQdrant, FileAndContent};
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -16,8 +17,8 @@ pub async fn process_source_code(
     local_repository_path: &str,
     pr_data: &PullRequestData,
     pr_info: FetchPullRequest,
-    embedding_model: &mut EmbeddingModelLocal,
-    memory: &EmbeddingMemoryQdrant,
+    embedding_service: &EmbeddingModelService<OpenaiEmbeddings, EmbeddingMemoryQdrant>,
+    collection: &str,
 ) -> anyhow::Result<()> {
     // 1. clone repository
     let repo_path = clone_remote_repository(
@@ -35,37 +36,22 @@ pub async fn process_source_code(
     let files = read_files(&repo_path, should_exclude)?;
     println!("Files: {:?}", files);
 
-    process_code_files(&repo_path, &files, embedding_model, memory).await?;
-
-    Ok(())
-}
-
-// 3. Process the files and code into a format that can be used by model
-// 4. Calculate code embeddings using model
-// 5. Upload the embeddings into the qdrant server
-async fn process_code_files(
-    repo_path: &str,
-    code_file_paths: &Vec<PathBuf>,
-    embedding_model: &mut EmbeddingModelLocal,
-    memory: &EmbeddingMemoryQdrant,
-) -> anyhow::Result<()> {
-    let embeddings: Vec<CodeEmbeddingData> = code_file_paths
+    let files: Vec<FileAndContent> = files
         .iter()
-        .map(|code_file_path| {
-            let code = fs::read_to_string(Path::join(Path::new(repo_path), code_file_path))
-                .expect("Failed to read file");
-
-            let embeddings = embedding_model.get_embedding(&code);
-            println!("Embeddings: {:?}", embeddings);
-            CodeEmbeddingData {
-                filename: code_file_path.to_str().unwrap().to_string(),
-                embedding: embeddings,
-                code,
+        .map(|file_path| {
+            let content = fs::read_to_string(Path::join(Path::new(repo_path.as_str()), file_path))
+                .expect("cannot read file");
+            FileAndContent {
+                content,
+                file_path: file_path.to_str().expect("cannot get file").to_string(),
             }
         })
         .collect();
 
-    memory.insert_batch(&embeddings).await
+    embedding_service
+        .calculate_and_save_embeddings(&files, collection)
+        .await?;
+    Ok(())
 }
 
 pub type ShouldExcludeFn = fn(&PathBuf) -> bool;

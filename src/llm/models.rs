@@ -34,15 +34,15 @@ impl LlmModel {
         }
     }
 
-    pub fn get_model_provider(&self) -> LlmProvider {
+    pub fn get_model_provider(&self) -> ModelProvider {
         match self {
-            LlmModel::Gpt3_5Turbo => LlmProvider::OpenAi,
-            LlmModel::Gpt4_32k => LlmProvider::OpenAi,
-            LlmModel::Gpt4TurboPreview => LlmProvider::OpenAi,
+            LlmModel::Gpt3_5Turbo => ModelProvider::OpenAi,
+            LlmModel::Gpt4_32k => ModelProvider::OpenAi,
+            LlmModel::Gpt4TurboPreview => ModelProvider::OpenAi,
 
-            LlmModel::Claude3Haiku => LlmProvider::Anthropic,
-            LlmModel::Claude3Sonnet => LlmProvider::Anthropic,
-            LlmModel::Claude3Opus => LlmProvider::Anthropic,
+            LlmModel::Claude3Haiku => ModelProvider::Anthropic,
+            LlmModel::Claude3Sonnet => ModelProvider::Anthropic,
+            LlmModel::Claude3Opus => ModelProvider::Anthropic,
         }
     }
 }
@@ -83,17 +83,18 @@ impl EmbeddingModel {
         }
     }
 
-    pub fn get_model_provider(&self) -> LlmProvider {
+    pub fn get_model_provider(&self) -> ModelProvider {
         match self {
-            EmbeddingModel::OpenAiTextEmbedding3Large => LlmProvider::OpenAi,
-            EmbeddingModel::OpenAiTextEmbedding3Small => LlmProvider::OpenAi,
-            EmbeddingModel::AnthropicVoyageLarge2 => LlmProvider::Anthropic,
-            EmbeddingModel::AnthropicVoyageCode2 => LlmProvider::Anthropic,
+            EmbeddingModel::OpenAiTextEmbedding3Large => ModelProvider::OpenAi,
+            EmbeddingModel::OpenAiTextEmbedding3Small => ModelProvider::OpenAi,
+            EmbeddingModel::AnthropicVoyageLarge2 => ModelProvider::Anthropic,
+            EmbeddingModel::AnthropicVoyageCode2 => ModelProvider::Anthropic,
         }
     }
 }
 
-pub enum LlmProvider {
+#[derive(Debug, ValueEnum, Clone, Eq, PartialEq, Serialize)]
+pub enum ModelProvider {
     OpenAi,
     Anthropic,
     Local,
