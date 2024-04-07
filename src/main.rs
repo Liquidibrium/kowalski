@@ -4,13 +4,13 @@ mod code_processor;
 mod device;
 mod diff;
 mod embeddings;
+mod factory;
 mod git_provider;
 mod init;
 mod llm;
 mod memory;
-mod utils;
 mod mocks;
-mod factory;
+mod utils;
 
 use crate::analyzer::analyze_code_changes;
 use crate::code_processor::code::process_source_code;
@@ -20,7 +20,7 @@ use crate::git_provider::client::fetch_pull_request;
 use crate::git_provider::git::GitProvider;
 use crate::git_provider::pr::FetchPullRequest;
 use crate::llm::anthropic::CloudeTextModel;
-use crate::llm::models::{LlmModel};
+use crate::llm::models::LlmModel;
 use crate::memory::memory_db::{init_memory, EmbeddingMemory, EmbeddingMemoryQdrant};
 use anyhow::Context;
 use clap::Parser;
@@ -65,10 +65,7 @@ async fn main() -> anyhow::Result<()> {
                 let openai_api_key = openai_api_key
                     .as_ref()
                     .context("OpenAI API key was not provided")?;
-                let embedding_api = OpenaiEmbeddings::new(
-                    openai_api_key,
-                    embedding_model,
-                );
+                let embedding_api = OpenaiEmbeddings::new(openai_api_key, embedding_model);
 
                 let embedding_service = EmbeddingModelService::new(embedding_api, memory);
 
