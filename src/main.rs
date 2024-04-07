@@ -9,6 +9,8 @@ mod init;
 mod llm;
 mod memory;
 mod utils;
+mod mocks;
+mod factory;
 
 use crate::analyzer::analyze_code_changes;
 use crate::code_processor::code::process_source_code;
