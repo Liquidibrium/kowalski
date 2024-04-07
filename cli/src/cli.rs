@@ -1,6 +1,6 @@
-use crate::git_provider::git::GitProvider;
-use crate::llm::models::{EmbeddingModel, LlmModel};
 use clap::{Parser, Subcommand};
+use kowalski_core::git_provider::git::GitProvider;
+use kowalski_core::llm::models::{EmbeddingModel, LlmModel};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]

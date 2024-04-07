@@ -1450,6 +1450,17 @@ name = "kowalski"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "chrono",
+ "clap",
+ "kowalski_core",
+ "tokio",
+]
+
+[[package]]
+name = "kowalski_core"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
  "candle-core",
  "candle-nn",
  "candle-transformers",
@@ -2589,6 +2600,13 @@ dependencies = [
  "itoa",
  "ryu",
  "serde",
+]
+
+[[package]]
+name = "server"
+version = "0.1.0"
+dependencies = [
+ "kowalski_core",
 ]
 
 [[package]]

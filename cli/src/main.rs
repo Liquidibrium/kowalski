@@ -1,30 +1,17 @@
-mod analyzer;
 mod cli;
-mod code_processor;
-mod device;
-mod diff;
-mod embeddings;
-mod factory;
-mod git_provider;
-mod init;
-mod llm;
-mod memory;
-mod mocks;
-mod utils;
-
-use crate::analyzer::analyze_code_changes;
-use crate::code_processor::code::process_source_code;
-use crate::embeddings::embedding_model_service::{EmbeddingModelService, EmbeddingService};
-use crate::embeddings::openai::OpenaiEmbeddings;
-use crate::git_provider::client::fetch_pull_request;
-use crate::git_provider::git::GitProvider;
-use crate::git_provider::pr::FetchPullRequest;
-use crate::llm::anthropic::CloudeTextModel;
-use crate::llm::models::LlmModel;
-use crate::memory::memory_db::{init_memory, EmbeddingMemory, EmbeddingMemoryQdrant};
 use anyhow::Context;
 use clap::Parser;
 use cli::Cli;
+use kowalski_core::analyzer::analyze_code_changes;
+use kowalski_core::code_processor::code::process_source_code;
+use kowalski_core::embeddings::embedding_model_service::{EmbeddingModelService, EmbeddingService};
+use kowalski_core::embeddings::openai::OpenaiEmbeddings;
+use kowalski_core::git_provider::client::fetch_pull_request;
+use kowalski_core::git_provider::git::GitProvider;
+use kowalski_core::git_provider::pr::FetchPullRequest;
+use kowalski_core::llm::anthropic::CloudeTextModel;
+use kowalski_core::llm::models::LlmModel;
+use kowalski_core::memory::memory_db::{init_memory, EmbeddingMemory, EmbeddingMemoryQdrant};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {

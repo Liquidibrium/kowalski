@@ -8,6 +8,12 @@ pub struct CodeAnalyzerModel {
     tokenizer: Tokenizer,
 }
 
+impl Default for CodeAnalyzerModel {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl CodeAnalyzerModel {
     pub fn new() -> Self {
         let loaded_model = load_model().expect("Unable to load model");
