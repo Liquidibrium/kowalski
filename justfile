@@ -23,3 +23,6 @@ format:
 check:
     cargo check
 #    rust-analyzer diagnostics .
+
+start:
+    cargo run --bin server
