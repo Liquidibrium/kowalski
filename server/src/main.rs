@@ -13,9 +13,21 @@ use tower_http::compression::CompressionLayer;
 use tower_http::propagate_header::PropagateHeaderLayer;
 use tower_http::services::{ServeDir, ServeFile};
 use tower_http::trace::TraceLayer;
+use tracing_subscriber::layer::SubscriberExt;
+use tracing_subscriber::util::SubscriberInitExt;
 
 #[tokio::main]
 async fn main() {
+    tracing_subscriber::registry()
+        .with(
+            tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
+                // axum logs rejections from built-in extractors with the `axum::rejection`
+                // target, at `TRACE` level. `axum::rejection=trace` enables showing those events
+                "example_tracing_aka_logging=debug,tower_http=debug,axum::rejection=trace".into()
+            }),
+        )
+        .with(tracing_subscriber::fmt::layer())
+        .init();
     // sqlx::migrate!()
     //     .run(&postgres)
     //     .await
@@ -24,8 +36,7 @@ async fn main() {
     // build our application with a single route
     let state = AppState {};
 
-    let api_router = create_api_router(state)
-        .layer(TraceLayer::new_for_http());
+    let api_router = create_api_router(state);
         // .layer(PropagateHeaderLayer::new(HeaderName::from_static(
         //     "x-request-id",
         // )));
@@ -33,6 +44,7 @@ async fn main() {
     let router = Router::new()
         .nest("/api", api_router)
         .merge(apidoc::router())
+        .layer(TraceLayer::new_for_http())
         // .nest_service(
         //     "/",
         //     ServeDir::new("dist").not_found_service(ServeFile::new("dist/index.html")),
