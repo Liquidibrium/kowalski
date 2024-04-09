@@ -5,6 +5,7 @@ use axum::Router;
 use http::header::{ACCEPT, AUTHORIZATION, ORIGIN};
 use http::Method;
 use tower_http::cors::{AllowOrigin, CorsLayer};
+use kowalski_core::memory::memory_db::EmbeddingMemory;
 use crate::handlers::analyze::analyze_handler;
 use crate::handlers::health::health_check;
 

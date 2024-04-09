@@ -10,8 +10,11 @@ crate::handlers::analyze::analyze_handler,
 crate::handlers::health::health_check
 ),
 components(
-schemas(crate::models::analyze::PrAnalysisRequest),
-responses(crate::models::analyze::PrAnalysisRequest),
+schemas(
+crate::models::analyze::PrAnalysisRequest,
+crate::models::analyze::ScheduledAnalysis
+),
+responses(crate::models::analyze::ScheduledAnalysis),
 ),
 )]
 pub struct OpenApiDoc;

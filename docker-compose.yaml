@@ -7,6 +7,16 @@ services:
       - "6333:6333"
       - "6334:6334"
     volumes:
-        - ./data:/qdrant/storage
+        - ./data/qdrant:/qdrant/storage
     environment:
       - QDRANT__SERVICE__GRPC_PORT=6334
+  posrgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: kowalski
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data

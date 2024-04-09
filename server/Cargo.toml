@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 async-stripe = { version = "0.34.1", features = ["runtime-tokio-hyper"] }
-axum = { version = "0.7.5", features = ["http2",  "multipart", "ws"]}
+axum = { version = "0.7.5", features = ["http2",  "multipart", "ws", "tower-log"]}
 axum-extra = { version = "0.9.3" ,  features = ["cookie-private"]}
 axum-macros = "0.4.1"
 bcrypt = "0.15.0"
@@ -18,13 +18,18 @@ kowalski_core = { path = "../kowalski_core" }
 log = "0.4.21"
 serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.115"
-sqlx = { version = "0.7.1", features = ["time"] }
+sqlx = { version = "0.7.1", features = ["runtime-tokio-native-tls", "postgres", "uuid", "time"] }
 time = { version = "0.3.20", features = ["serde"] }
-tokio = "1.37.0"
+tokio = { version = "1.37.0", features = ["macros", "rt-multi-thread"] }
 trace = "0.1.7"
 tracing-subscriber = { version = "0.3.18" , features = ["env-filter", "tracing"]}
 tower = "0.4.13"
-tower-http = { version = "0.5.0", features = ["cors", "fs", "compression-full", "propagate-header"] }
+tower-http = { version = "0.5.0", features = ["trace","cors", "fs", "compression-full", "propagate-header"] }
 utoipauto = "0.1.10"
 utoipa = { version = "4.2.0", features = ["axum_extras"] }
 utoipa-swagger-ui = { version = "6.0.0", features = ["axum"] }
+uuid = { version = "1.8.0", features = ["v7", "serde"] }
+dotenv = "0.15.0"
+argon2 = "0.5.3"
+anyhow = "1.0.81"
+clap = "4.5.4"

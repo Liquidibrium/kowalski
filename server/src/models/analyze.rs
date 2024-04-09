@@ -7,3 +7,8 @@ pub struct PrAnalysisRequest {
     pub openai_key: String,
     pub cloude_api_key: String,
 }
+
+#[derive(Serialize, ToSchema,ToResponse, Debug)]
+pub struct ScheduledAnalysis {
+    pub analysis_id: String,
+}
