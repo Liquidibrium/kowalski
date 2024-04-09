@@ -12,6 +12,9 @@ update:
     rustup component add rust-analyzer
     rustup component add clippy
 
+    # CLI For migration
+    cargo install sqlx-cli
+    
 install:
     cargo install --path .
 
@@ -29,3 +32,13 @@ check:
 
 start:
     cargo run --bin server
+    
+    
+add_migration *name:
+    sqlx migrate add -r {{ name }}
+    
+run_migration:
+    sqlx migrate run
+    
+revert_migration:
+    sqlx migrate revert

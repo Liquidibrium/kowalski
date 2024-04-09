@@ -1,10 +1,10 @@
 use crate::state::AppState;
 use axum::routing::{get, post};
 use axum::Router;
+use std::sync::Arc;
 
 use crate::handlers::analyze::analyze_handler;
 use crate::handlers::health::health_check;
-use kowalski_core::memory::memory_db::EmbeddingMemory;
 use tower_http::cors::{AllowOrigin, CorsLayer};
 
 pub fn create_api_router(state: AppState) -> Router {
@@ -17,6 +17,6 @@ pub fn create_api_router(state: AppState) -> Router {
     Router::new()
         .route("/analyze", post(analyze_handler))
         .route("/health", get(health_check))
-        .with_state(state)
+        .with_state(Arc::new(state))
         .layer(cors)
 }

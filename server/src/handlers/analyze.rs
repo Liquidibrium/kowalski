@@ -4,10 +4,11 @@ use axum::extract::State;
 use axum::response::IntoResponse;
 use axum::Json;
 use http::StatusCode;
+use std::sync::Arc;
 
 #[utoipa::path(post, path = "/api/analyze", responses((status = StatusCode::CREATED, body = ScheduledAnalysis)))]
 pub async fn analyze_handler(
-    State(_state): State<AppState>,
+    State(_state): State<Arc<AppState>>,
     Json(pr_analysis_request): Json<PrAnalysisRequest>,
 ) -> impl IntoResponse {
     println!(

@@ -1,5 +1,6 @@
 mod apidoc;
 mod configure;
+mod db;
 mod handlers;
 mod models;
 mod router;
@@ -7,15 +8,16 @@ mod state;
 
 use crate::router::create_api_router;
 use crate::state::AppState;
-use anyhow::Context;
+
 use axum::Router;
 use clap::Parser;
 
 use log::info;
-use sqlx::postgres::PgPoolOptions;
+
 use tower_http::compression::CompressionLayer;
 
 use crate::configure::config::Config;
+use crate::db::create_db_pool;
 use kowalski_core::memory::memory_db::{EmbeddingMemory, EmbeddingMemoryQdrant};
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::layer::SubscriberExt;
@@ -37,19 +39,8 @@ async fn main() -> anyhow::Result<()> {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
-    // We create a single connection pool for SQLx that's shared across the whole application.
-    // This saves us from opening a new connection for every API call, which is wasteful.
-    let db = PgPoolOptions::new()
-        // The default connection limit for a Postgres server is 100 connections, minus 3 for superusers.
-        // Since we're using the default superuser we don't have to worry about this too much,
-        // although we should leave some connections available for manual access.
-        //
-        // If you're deploying your application with multiple replicas, then the total
-        // across all replicas should not exceed the Postgres connection limit.
-        .max_connections(50)
-        .connect(&config.postgres_url)
-        .await
-        .context("could not connect to database_url")?;
+    let db = create_db_pool(&config.database_url).await?;
+
     // sqlx::migrate!()
     //     .run(&postgres)
     //     .await

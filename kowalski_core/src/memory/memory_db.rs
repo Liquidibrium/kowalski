@@ -8,7 +8,6 @@ use qdrant_client::qdrant::{
     WithPayloadSelector, WithVectorsSelector,
 };
 use std::collections::HashMap;
-use std::sync::Arc;
 
 pub fn create_vector_store_client(url: &str) -> anyhow::Result<QdrantClient> {
     QdrantClient::from_url(url).build()
@@ -55,17 +54,14 @@ pub trait EmbeddingMemory {
     ) -> anyhow::Result<Vec<CodeEmbeddingResult>>;
 }
 
-#[derive(Clone)]
 pub struct EmbeddingMemoryQdrant {
-    client: Arc<QdrantClient>,
+    client: QdrantClient,
 }
 
 impl EmbeddingMemory for EmbeddingMemoryQdrant {
     fn new(db_url: &str) -> Self {
         let client = create_vector_store_client(db_url).unwrap();
-        EmbeddingMemoryQdrant {
-            client: Arc::new(client),
-        }
+        EmbeddingMemoryQdrant { client }
     }
 
     async fn insert_batch(

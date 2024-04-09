@@ -18,8 +18,8 @@ pub struct Config {
     pub port: u16,
 
     /// The connection URL for the Postgres database this application should use.
-    #[clap(long, env("POSTGRES_URL"))]
-    pub postgres_url: String,
+    #[clap(long, env("DATABASE_URL"))]
+    pub database_url: String,
 
     #[clap(long, env("QDRANT_URL"))]
     pub qdrant_url: String,
