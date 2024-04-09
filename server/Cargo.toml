@@ -24,3 +24,6 @@ tokio = "1.37.0"
 trace = "0.1.7"
 tower = "0.4.13"
 tower-http = { version = "0.5.0", features = ["cors", "fs", "compression-full", "propagate-header"] }
+utoipauto = "0.1.10"
+utoipa = { version = "4.2.0", features = ["axum_extras"] }
+utoipa-swagger-ui = { version = "6.0.0", features = ["axum"] }

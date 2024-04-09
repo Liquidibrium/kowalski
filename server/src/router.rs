@@ -1,10 +1,12 @@
-use crate::analyze::analyze_handler;
+
 use crate::state::AppState;
 use axum::routing::{get, post};
 use axum::Router;
 use http::header::{ACCEPT, AUTHORIZATION, ORIGIN};
 use http::Method;
 use tower_http::cors::{AllowOrigin, CorsLayer};
+use crate::handlers::analyze::analyze_handler;
+use crate::handlers::health::health_check;
 
 pub fn create_api_router(state: AppState) -> Router {
     let cors = CorsLayer::new()
@@ -20,6 +22,3 @@ pub fn create_api_router(state: AppState) -> Router {
         .layer(cors)
 }
 
-pub async fn health_check() -> &'static str {
-    "status: OK"
-}
