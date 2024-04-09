@@ -18,7 +18,7 @@ kowalski_core = { path = "../kowalski_core" }
 log = "0.4.21"
 serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.115"
-sqlx = { version = "0.7.1", features = ["runtime-tokio-native-tls", "postgres", "uuid", "time"] }
+sqlx = { version = "0.7.1", features = ["runtime-tokio-native-tls", "postgres", "uuid", "time", "chrono"] }
 time = { version = "0.3.20", features = ["serde"] }
 tokio = { version = "1.37.0", features = ["macros", "rt-multi-thread"] }
 trace = "0.1.7"
@@ -33,3 +33,4 @@ dotenv = "0.15.0"
 argon2 = "0.5.3"
 anyhow = "1.0.81"
 clap = "4.5.4"
+chrono = "0.4.37"

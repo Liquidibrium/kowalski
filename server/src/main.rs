@@ -1,6 +1,7 @@
 mod apidoc;
 mod configure;
 mod db;
+mod entities;
 mod handlers;
 mod models;
 mod router;
@@ -41,10 +42,10 @@ async fn main() -> anyhow::Result<()> {
 
     let db = create_db_pool(&config.database_url).await?;
 
-    // sqlx::migrate!()
-    //     .run(&postgres)
-    //     .await
-    //     .expect("Had some errors running migrations :(");
+    sqlx::migrate!()
+        .run(&db)
+        .await
+        .expect("Errors occurred while running migration");
 
     let embedding_memory = EmbeddingMemoryQdrant::new(config.qdrant_url.as_str());
 
