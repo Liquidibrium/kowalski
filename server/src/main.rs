@@ -1,32 +1,31 @@
-mod router;
-mod state;
 mod apidoc;
+mod configure;
 mod handlers;
 mod models;
-mod configure;
+mod router;
+mod state;
 
-use anyhow::Context;
 use crate::router::create_api_router;
 use crate::state::AppState;
+use anyhow::Context;
 use axum::Router;
 use clap::Parser;
-use http::HeaderName;
+
 use log::info;
 use sqlx::postgres::PgPoolOptions;
 use tower_http::compression::CompressionLayer;
-use tower_http::propagate_header::PropagateHeaderLayer;
-use tower_http::services::{ServeDir, ServeFile};
+
+use crate::configure::config::Config;
+use kowalski_core::memory::memory_db::{EmbeddingMemory, EmbeddingMemoryQdrant};
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
-use kowalski_core::memory::memory_db::{EmbeddingMemory, EmbeddingMemoryQdrant};
-use crate::configure::config::Config;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     dotenv::dotenv().ok();
     let config = Config::parse();
-    
+
     tracing_subscriber::registry()
         .with(
             tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
@@ -57,17 +56,17 @@ async fn main() -> anyhow::Result<()> {
     //     .expect("Had some errors running migrations :(");
 
     let embedding_memory = EmbeddingMemoryQdrant::new(config.qdrant_url.as_str());
-    
+
     // build our application with a single route
     let state = AppState {
         db,
-        embedding_memory
+        embedding_memory,
     };
 
     let api_router = create_api_router(state);
-        // .layer(PropagateHeaderLayer::new(HeaderName::from_static(
-        //     "x-request-id",
-        // )));
+    // .layer(PropagateHeaderLayer::new(HeaderName::from_static(
+    //     "x-request-id",
+    // )));
 
     let router = Router::new()
         .nest("/api", api_router)
@@ -81,7 +80,9 @@ async fn main() -> anyhow::Result<()> {
 
     info!("Listening on port {}", config.port);
     // run our app with hyper, listening globally on port 3000
-    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", config.port)).await.unwrap();
+    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", config.port))
+        .await
+        .unwrap();
     axum::serve(listener, router).await.unwrap();
     Ok(())
 }

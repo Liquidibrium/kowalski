@@ -2,6 +2,9 @@
 build:
     cargo build
 
+release: 
+    carge build --release
+    
 update:
     rustup update
     rustup component add rustfmt

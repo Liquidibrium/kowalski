@@ -1,4 +1,3 @@
-
 /// The configuration parameters for the application.
 ///
 /// These can either be passed on the command line, or pulled from environment variables.
@@ -15,9 +14,15 @@
 /// See `.env.sample` in the repository root for details.
 #[derive(clap::Parser)]
 pub struct Config {
+    #[clap(long, env("PORT"), default_value = "8080")]
+    pub port: u16,
+
     /// The connection URL for the Postgres database this application should use.
     #[clap(long, env("POSTGRES_URL"))]
     pub postgres_url: String,
+
+    #[clap(long, env("QDRANT_URL"))]
+    pub qdrant_url: String,
 
     /// The HMAC signing and verification key used for login tokens (JWTs).
     ///
@@ -25,10 +30,4 @@ pub struct Config {
     /// In practice, it should be a long, random string that would be infeasible to brute-force.
     #[clap(long, env("JWT_HMAC_KEY"))]
     pub jwt_hmac_key: String,
-    
-    #[clap(long, env("QDRANT_URL"))]
-    pub qdrant_url: String,
-    
-    #[clap(long, env("PORT"), default_value = "8080")]
-    pub port: u16,
 }

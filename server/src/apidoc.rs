@@ -1,21 +1,20 @@
 use axum::Router;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
-use utoipauto::utoipauto;
 
 #[derive(OpenApi)]
 #[openapi(
-paths(
-crate::handlers::analyze::analyze_handler,
-crate::handlers::health::health_check
-),
-components(
-schemas(
-crate::models::analyze::PrAnalysisRequest,
-crate::models::analyze::ScheduledAnalysis
-),
-responses(crate::models::analyze::ScheduledAnalysis),
-),
+    paths(
+        crate::handlers::analyze::analyze_handler,
+        crate::handlers::health::health_check
+    ),
+    components(
+        schemas(
+            crate::models::analyze::PrAnalysisRequest,
+            crate::models::analyze::ScheduledAnalysis
+        ),
+        responses(crate::models::analyze::ScheduledAnalysis),
+    )
 )]
 pub struct OpenApiDoc;
 // modifiers(&SecurityAddon)

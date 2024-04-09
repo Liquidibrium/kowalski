@@ -63,7 +63,9 @@ pub struct EmbeddingMemoryQdrant {
 impl EmbeddingMemory for EmbeddingMemoryQdrant {
     fn new(db_url: &str) -> Self {
         let client = create_vector_store_client(db_url).unwrap();
-        EmbeddingMemoryQdrant { client: Arc::new(client) }
+        EmbeddingMemoryQdrant {
+            client: Arc::new(client),
+        }
     }
 
     async fn insert_batch(

@@ -1,19 +1,17 @@
-
 use crate::state::AppState;
 use axum::routing::{get, post};
 use axum::Router;
-use http::header::{ACCEPT, AUTHORIZATION, ORIGIN};
-use http::Method;
-use tower_http::cors::{AllowOrigin, CorsLayer};
-use kowalski_core::memory::memory_db::EmbeddingMemory;
+
 use crate::handlers::analyze::analyze_handler;
 use crate::handlers::health::health_check;
+use kowalski_core::memory::memory_db::EmbeddingMemory;
+use tower_http::cors::{AllowOrigin, CorsLayer};
 
 pub fn create_api_router(state: AppState) -> Router {
     let cors = CorsLayer::new()
-    //     .allow_credentials(true)
-    //     .allow_methods(vec![Method::GET, Method::POST, Method::PUT, Method::DELETE])
-    //     .allow_headers(vec![ORIGIN, AUTHORIZATION, ACCEPT])
+        //     .allow_credentials(true)
+        //     .allow_methods(vec![Method::GET, Method::POST, Method::PUT, Method::DELETE])
+        //     .allow_headers(vec![ORIGIN, AUTHORIZATION, ACCEPT])
         .allow_origin(AllowOrigin::any());
 
     Router::new()
@@ -22,4 +20,3 @@ pub fn create_api_router(state: AppState) -> Router {
         .with_state(state)
         .layer(cors)
 }
-
