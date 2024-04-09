@@ -2,9 +2,13 @@ mod apidoc;
 mod configure;
 mod db;
 mod entities;
+mod errors;
 mod handlers;
+mod middleware;
 mod models;
+mod repository;
 mod router;
+mod service;
 mod state;
 
 use crate::router::create_api_router;
@@ -48,11 +52,13 @@ async fn main() -> anyhow::Result<()> {
         .expect("Errors occurred while running migration");
 
     let embedding_memory = EmbeddingMemoryQdrant::new(config.qdrant_url.as_str());
+    let port = config.port;
 
     // build our application with a single route
     let state = AppState {
         db,
         embedding_memory,
+        config,
     };
 
     let api_router = create_api_router(state);
@@ -70,9 +76,9 @@ async fn main() -> anyhow::Result<()> {
         // )
         .layer(CompressionLayer::new());
 
-    info!("Listening on port {}", config.port);
+    info!("Listening on port {}", port);
     // run our app with hyper, listening globally on port 3000
-    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", config.port))
+    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", port))
         .await
         .unwrap();
     axum::serve(listener, router).await.unwrap();

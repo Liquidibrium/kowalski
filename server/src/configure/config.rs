@@ -30,4 +30,8 @@ pub struct Config {
     /// In practice, it should be a long, random string that would be infeasible to brute-force.
     #[clap(long, env("JWT_HMAC_KEY"))]
     pub jwt_hmac_key: String,
+
+    // The expiration time for JWT tokens in seconds, 1 day default
+    #[clap(long, env("JWT_EXPIRATION_TIME"), default_value = "86400")]
+    pub jwt_expiration_time: i64,
 }

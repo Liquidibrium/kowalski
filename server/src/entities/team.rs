@@ -1,3 +1,6 @@
+use sqlx::FromRow;
+
+#[derive(Debug, PartialEq, Clone, FromRow)]
 pub struct Team {
     pub id: sqlx::types::Uuid,
     pub name: String,

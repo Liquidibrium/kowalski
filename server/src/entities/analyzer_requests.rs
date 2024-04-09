@@ -1,3 +1,7 @@
+use sqlx::FromRow;
+use strum_macros::EnumString;
+
+#[derive(Debug, PartialEq, Clone, EnumString)]
 pub enum Status {
     Scheduled,
     Running,
@@ -5,6 +9,7 @@ pub enum Status {
     Failed,
 }
 
+#[derive(Debug, PartialEq, Clone, FromRow)]
 pub struct AnalyzerRequests {
     pub id: sqlx::types::Uuid,
     pub team_id: sqlx::types::Uuid,

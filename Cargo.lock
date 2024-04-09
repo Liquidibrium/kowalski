@@ -2103,6 +2103,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "jwt"
+version = "0.16.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6204285f77fe7d9784db3fdc449ecce1a0114927a51d5a41c4c7a292011c015f"
+dependencies = [
+ "base64 0.13.1",
+ "crypto-common",
+ "digest",
+ "hmac",
+ "serde",
+ "serde_json",
+ "sha2",
+]
+
+[[package]]
 name = "kowalski"
 version = "0.1.0"
 dependencies = [
@@ -2133,6 +2148,8 @@ dependencies = [
  "reqwest 0.12.3",
  "serde",
  "serde_json",
+ "strum",
+ "strum_macros",
  "tiktoken-rs",
  "time",
  "tokenizers",
@@ -3583,13 +3600,19 @@ dependencies = [
  "chrono",
  "clap",
  "dotenv",
+ "hmac",
  "http 1.1.0",
+ "jsonwebtoken",
+ "jwt",
  "kowalski_core",
  "log",
  "reqwest 0.12.3",
  "serde",
  "serde_json",
+ "sha2",
  "sqlx",
+ "strum",
+ "strum_macros",
  "time",
  "tokio",
  "tower",
@@ -4013,6 +4036,25 @@ name = "strsim"
 version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7da8b5736845d9f2fcb837ea5d9e2628564b3b043a70948a3f0b778838c5fb4f"
+
+[[package]]
+name = "strum"
+version = "0.26.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5d8cec3501a5194c432b2b7976db6b7d10ec95c253208b45f83f7136aa985e29"
+
+[[package]]
+name = "strum_macros"
+version = "0.26.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c6cf59daf282c0a494ba14fd21610a0325f9f90ec9d1231dea26bcb1d696c946"
+dependencies = [
+ "heck 0.4.1",
+ "proc-macro2",
+ "quote",
+ "rustversion",
+ "syn 2.0.58",
+]
 
 [[package]]
 name = "subtle"

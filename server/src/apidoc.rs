@@ -6,12 +6,17 @@ use utoipa_swagger_ui::SwaggerUi;
 #[openapi(
     paths(
         crate::handlers::analyze::analyze_handler,
-        crate::handlers::health::health_check
+        crate::handlers::health::health_check,
+        crate::handlers::auth::login_handler,
+        crate::handlers::auth::register_handler,
     ),
     components(
         schemas(
             crate::models::analyze::PrAnalysisRequest,
-            crate::models::analyze::ScheduledAnalysis
+            crate::models::analyze::ScheduledAnalysis,
+            crate::models::auth::LoginRequest,
+            crate::models::auth::RegisterRequest,
+            crate::models::auth::TokenResponse,
         ),
         responses(crate::models::analyze::ScheduledAnalysis),
     )
