@@ -1,5 +1,3 @@
-
-
 export type AnalyzePrInput = {
   prLink: string
   githubToken?: string
@@ -9,19 +7,16 @@ export type AnalyzePrInput = {
 }
 
 
-
-export async function  analyzePrQuery(input:AnalyzePrInput) {
-  const response = await fetch('/api/analyze', {
-    method: 'POST',
+export async function analyzePrQuery(input: AnalyzePrInput) {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/analyze`, {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json'
+      "Content-Type": "application/json"
     },
     body: JSON.stringify(input)
-  })
+  });
 
   const jsonData = await response.json();
 
-
-
-
+  return jsonData;
 }

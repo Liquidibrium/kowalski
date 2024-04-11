@@ -9,11 +9,11 @@ use crate::handlers::health::health_check;
 use tower_http::cors::{AllowOrigin, CorsLayer};
 
 pub fn create_api_router(state: AppState) -> Router {
-    let cors = CorsLayer::new()
+    let cors = CorsLayer::permissive();
         //     .allow_credentials(true)
         //     .allow_methods(vec![Method::GET, Method::POST, Method::PUT, Method::DELETE])
         //     .allow_headers(vec![ORIGIN, AUTHORIZATION, ACCEPT])
-        .allow_origin(AllowOrigin::any());
+        // .allow_origin(AllowOrigin::any());
 
     Router::new()
         .route("/analyze", post(analyze_handler))

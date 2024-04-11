@@ -1,10 +1,10 @@
+use std::str::FromStr;
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use strum_macros::{Display, EnumString};
 
 #[derive(
-    EnumString,
     Serialize,
     Deserialize,
     Display,
@@ -16,28 +16,25 @@ use strum_macros::{Display, EnumString};
     Clone,
     sqlx::Type,
 )]
-#[sqlx(type_name = "provider", rename_all = "lowercase")]
+#[sqlx(rename_all = "lowercase")]
 pub enum AuthProvider {
     Local,
     Google,
     Github,
 }
 
-// impl FromStr for AuthProvider {
-//     type Err = ();
-//
-//     fn from_str(s: &str) -> Result<Self, Self::Err> {
-//         match s.to_lowercase().as_str() {
-//             "local" => Ok(AuthProvider::Local),
-//             "google" => Ok(AuthProvider::Google),
-//             "github" => Ok(AuthProvider::Github),
-//             _ => Err(()),
-//         }
-//     }
-// }
+impl From<String> for AuthProvider {
+    fn from(value: String) -> Self {
+        match value.to_lowercase().as_str() {
+            "local" => AuthProvider::Local,
+            "google" => AuthProvider::Google,
+            "github" => AuthProvider::Github,
+            _ => AuthProvider::Local,
+        }
+    }
+}
 
 #[derive(
-    EnumString,
     Serialize,
     Deserialize,
     Display,
@@ -49,23 +46,22 @@ pub enum AuthProvider {
     Clone,
     sqlx::Type,
 )]
-#[sqlx(type_name = "status", rename_all = "lowercase")]
+#[sqlx(rename_all = "lowercase")]
 pub enum UserStatus {
     Active,
     Pending,
     Blocked,
 }
-// impl FromStr for UserStatus {
-//     type Err = ();
-//
-//     fn from_str(s: &str) -> Result<Self, Self::Err> {
-//         match s.to_lowercase().as_str() {
-//             "active" => Ok(UserStatus::Active),
-//             "pending" => Ok(UserStatus::Pending),
-//             _ => Err(()),
-//         }
-//     }
-// }
+impl From<String> for UserStatus {
+    fn from(value: String) -> Self {
+        match value.to_lowercase().as_str() {
+            "active" => UserStatus::Active,
+            "pending" => UserStatus::Pending,
+            "blocked" => UserStatus::Blocked,
+            _ => UserStatus::Pending,
+        }
+    }
+}
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, FromRow)]
 pub struct UserEntity {

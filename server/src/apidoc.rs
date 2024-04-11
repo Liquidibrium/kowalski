@@ -15,8 +15,9 @@ use utoipa_swagger_ui::SwaggerUi;
             crate::models::analyze::PrAnalysisRequest,
             crate::models::analyze::ScheduledAnalysis,
             crate::models::auth::LoginRequest,
-            crate::models::auth::RegisterRequest,
             crate::models::auth::TokenResponse,
+            crate::models::auth::RegisterRequest,
+            crate::models::auth::RegisterResponse,
         ),
         responses(crate::models::analyze::ScheduledAnalysis),
     )

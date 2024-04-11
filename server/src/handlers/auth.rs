@@ -1,6 +1,6 @@
 use crate::entities::user::{AuthProvider, UserEntity, UserStatus};
 use crate::errors::AppResponseError;
-use crate::models::auth::{LoginRequest, RegisterRequest, TokenResponse};
+use crate::models::auth::{LoginRequest, RegisterRequest, RegisterResponse, TokenResponse};
 use crate::repository::user::{create_user, get_user_by_email};
 use crate::service::jwt::create_token;
 use crate::state::AppState;
@@ -8,7 +8,7 @@ use axum::extract::State;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
 use http::StatusCode;
-use log::error;
+use log::{error, info};
 
 use anyhow::Context;
 use chrono::Utc;
@@ -68,10 +68,10 @@ pub async fn login_handler(
         state.config.jwt_expiration_time,
     )
     .unwrap();
-    (StatusCode::OK, Json(TokenResponse::new(token))).into_response()
+    (StatusCode::OK, Json(TokenResponse::new(token, state.config.jwt_expiration_time))).into_response()
 }
 
-#[utoipa::path(post, path = "/api/auth/register", responses((status = StatusCode::CREATED, body = TokenResponse)))]
+#[utoipa::path(post, path = "/api/auth/register", responses((status = StatusCode::CREATED, body = RegisterResponse)))]
 pub async fn register_handler(
     State(state): State<Arc<AppState>>,
     Json(register_request): Json<RegisterRequest>,
@@ -105,6 +105,8 @@ pub async fn register_handler(
         status: UserStatus::Pending,
         provider: AuthProvider::Local,
     };
+
+    info!("Creating user: {:?}", user);
     let user = create_user(&state.db, user).await;
     if let Err(e) = user {
         error!("Error creating user: {:?}", e);
@@ -133,7 +135,9 @@ pub async fn register_handler(
     }
     (
         StatusCode::CREATED,
-        Json(TokenResponse::new(token.unwrap())),
+        Json(RegisterResponse {
+            user_id: user.id.clone(),
+        }),
     )
         .into_response()
 }
